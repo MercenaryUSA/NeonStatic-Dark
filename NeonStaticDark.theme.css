@@ -1,0 +1,1286 @@
+/**
+ * @name Neon Static Dark
+ * @author Mercenary
+ * @version 1.0.0
+ * @description A darker take on Neon Static: almost-black surfaces, deeper neon cyan and magenta used sparingly as accents, clipped "chamfered" corners, a faint grid and scanlines, and glitchy hover effects. Easy on the eyes: the neon is for edges, never for big fills. Uses Chakra Petch + Orbitron.
+ */
+
+/* Fonts (imports must stay at the top of the file).
+   Google Fonts first; jsdelivr serves the same fonts as a fallback. */
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=Orbitron:wght@500;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource/chakra-petch@5/index.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/orbitron@5/index.css");
+@import url("https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5/index.css");
+
+/* =========================================================================
+   1. KNOBS: change these to restyle the whole theme
+   ========================================================================= */
+:root {
+    /* Fonts */
+    --cp-font: "Chakra Petch", "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --cp-font-display: "Orbitron", "Orbitron Variable", var(--cp-font);
+    --cp-font-code: "JetBrains Mono", "JetBrains Mono Variable", "gg mono", Consolas, "Courier New", monospace;
+
+    /* Neon. Cyan is the main accent, magenta the second, yellow is for mentions */
+    --cp-cyan: #1fc8d6;
+    --cp-magenta: #e0268c;
+    --cp-yellow: #d9c440;
+    --cp-red: #e63958;
+
+    --cp-accent: var(--cp-cyan);
+    --cp-accent-hsl: 185 75% 48%;
+    --cp-accent-2: var(--cp-magenta);
+    --cp-accent-strong: #086a79;
+    /* filled buttons; dark enough for white text */
+    --cp-accent-soft: color-mix(in oklab, var(--cp-accent) 13%, transparent);
+    --cp-accent-softer: color-mix(in oklab, var(--cp-accent) 7%, transparent);
+
+    /* Surfaces, darkest -> lightest (deep indigo-black) */
+    --cp-bg-0: #030307;
+    /* app frame / server bar */
+    --cp-bg-1: #06050c;
+    /* chat */
+    --cp-bg-2: #090812;
+    /* channel sidebar */
+    --cp-surface-1: #0d0c1a;
+    --cp-surface-2: #121024;
+    --cp-surface-3: #18152f;
+
+    /* Text: cool off-whites, never pure neon */
+    --cp-text-strong: #dfe1f5;
+    --cp-text: #b4b7d4;
+    --cp-text-muted: #75779a;
+    --cp-text-subtle: #525475;
+    --cp-link: #5fd3e2;
+
+    /* Lines */
+    --cp-line-1: rgb(150 140 255 / 0.05);
+    --cp-line-2: rgb(150 140 255 / 0.08);
+    --cp-line-3: rgb(150 140 255 / 0.13);
+    --cp-line-neon: color-mix(in oklab, var(--cp-accent) 40%, transparent);
+
+    /* Shape: small radii + chamfered corners */
+    --cp-radius-sm: 2px;
+    --cp-radius-md: 4px;
+    --cp-radius-lg: 6px;
+    --cp-notch: 8px;
+    --cp-chamfer: polygon(var(--cp-notch) 0, 100% 0, 100% calc(100% - var(--cp-notch)), calc(100% - var(--cp-notch)) 100%, 0 100%, 0 var(--cp-notch));
+
+    /* Atmosphere: set any of these to 0 to turn it off */
+    --cp-scanlines: 0.035;
+    /* strength of the CRT scanline overlay */
+    --cp-grid: 0.025;
+    /* strength of the grid behind the chat */
+    --cp-glow-strength: 1;
+    /* 0 = no neon glow, 1 = default */
+
+    /* Motion */
+    --cp-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --cp-ease-snap: cubic-bezier(0.3, 1.4, 0.6, 1);
+    --cp-fast: 120ms;
+    --cp-med: 200ms;
+    --cp-slow: 320ms;
+
+    /* Glow + depth */
+    --cp-glass: color-mix(in oklab, var(--cp-surface-2) 82%, transparent);
+    --cp-blur: blur(16px) saturate(1.4);
+    --cp-edge: inset 0 1px 0 rgb(255 255 255 / 0.05), inset 0 0 0 1px var(--cp-line-1);
+    --cp-shadow: 0 18px 44px -12px rgb(0 0 0 / 0.75), 0 2px 6px rgb(0 0 0 / 0.4);
+    --cp-glow: 0 0 calc(14px * var(--cp-glow-strength)) -2px color-mix(in oklab, var(--cp-accent) 55%, transparent);
+    --cp-glow-2: 0 0 calc(14px * var(--cp-glow-strength)) -2px color-mix(in oklab, var(--cp-accent-2) 55%, transparent);
+    --cp-text-glow: 0 0 calc(8px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-accent) 55%, transparent);
+}
+
+/* =========================================================================
+   2. BASE PALETTE
+   Discord builds every colour (buttons, selected rows, highlights,
+   toggles...) from these scales. Recolouring them themes the places
+   that have no token of their own.
+   ========================================================================= */
+:root {
+    /* neutral scale: indigo tint */
+    --neutral-1-hsl: 250 calc(var(--saturation-factor, 1)*0%) 100%;
+    --neutral-2-hsl: 250 calc(var(--saturation-factor, 1)*4%) 98.4%;
+    --neutral-3-hsl: 250 calc(var(--saturation-factor, 1)*10.7%) 97.1%;
+    --neutral-4-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 95.5%;
+    --neutral-5-hsl: 250 calc(var(--saturation-factor, 1)*10.7%) 94.1%;
+    --neutral-6-hsl: 250 calc(var(--saturation-factor, 1)*9.3%) 92.5%;
+    --neutral-7-hsl: 250 calc(var(--saturation-factor, 1)*8.5%) 91.4%;
+    --neutral-8-hsl: 250 calc(var(--saturation-factor, 1)*7.8%) 89.8%;
+    --neutral-9-hsl: 250 calc(var(--saturation-factor, 1)*9.1%) 88.4%;
+    --neutral-10-hsl: 250 calc(var(--saturation-factor, 1)*8.5%) 86.9%;
+    --neutral-11-hsl: 250 calc(var(--saturation-factor, 1)*9.4%) 85.5%;
+    --neutral-12-hsl: 250 calc(var(--saturation-factor, 1)*8.9%) 83.9%;
+    --neutral-13-hsl: 250 calc(var(--saturation-factor, 1)*8.5%) 82.7%;
+    --neutral-14-hsl: 250 calc(var(--saturation-factor, 1)*8.2%) 81.2%;
+    --neutral-15-hsl: 250 calc(var(--saturation-factor, 1)*8.9%) 79.8%;
+    --neutral-16-hsl: 250 calc(var(--saturation-factor, 1)*8.5%) 78.2%;
+    --neutral-17-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 77.1%;
+    --neutral-18-hsl: 250 calc(var(--saturation-factor, 1)*8%) 75.5%;
+    --neutral-19-hsl: 250 calc(var(--saturation-factor, 1)*8.5%) 74.1%;
+    --neutral-20-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 72.5%;
+    --neutral-21-hsl: 250 calc(var(--saturation-factor, 1)*8.1%) 71.4%;
+    --neutral-22-hsl: 250 calc(var(--saturation-factor, 1)*8.6%) 70%;
+    --neutral-23-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 68.4%;
+    --neutral-24-hsl: 250 calc(var(--saturation-factor, 1)*8.2%) 67.3%;
+    --neutral-25-hsl: 250 calc(var(--saturation-factor, 1)*8%) 65.7%;
+    --neutral-26-hsl: 250 calc(var(--saturation-factor, 1)*8.4%) 64.3%;
+    --neutral-27-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 63.1%;
+    --neutral-28-hsl: 250 calc(var(--saturation-factor, 1)*8.1%) 61.6%;
+    --neutral-29-hsl: 250 calc(var(--saturation-factor, 1)*8%) 60.4%;
+    --neutral-30-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 59%;
+    --neutral-31-hsl: 250 calc(var(--saturation-factor, 1)*7.7%) 57.6%;
+    --neutral-32-hsl: 250 calc(var(--saturation-factor, 1)*8%) 56.3%;
+    --neutral-33-hsl: 250 calc(var(--saturation-factor, 1)*7.9%) 55.1%;
+    --neutral-34-hsl: 250 calc(var(--saturation-factor, 1)*7.8%) 53.5%;
+    --neutral-35-hsl: 250 calc(var(--saturation-factor, 1)*7.7%) 52.4%;
+    --neutral-36-hsl: 250 calc(var(--saturation-factor, 1)*8%) 51%;
+    --neutral-37-hsl: 250 calc(var(--saturation-factor, 1)*7.6%) 49.6%;
+    --neutral-38-hsl: 250 calc(var(--saturation-factor, 1)*8.1%) 48.2%;
+    --neutral-39-hsl: 250 calc(var(--saturation-factor, 1)*8.2%) 47.1%;
+    --neutral-40-hsl: 250 calc(var(--saturation-factor, 1)*8.3%) 45.9%;
+    --neutral-41-hsl: 250 calc(var(--saturation-factor, 1)*8.6%) 44.2%;
+    --neutral-42-hsl: 250 calc(var(--saturation-factor, 1)*8.9%) 42.9%;
+    --neutral-43-hsl: 250 calc(var(--saturation-factor, 1)*9.2%) 41.7%;
+    --neutral-44-hsl: 250 calc(var(--saturation-factor, 1)*10%) 40.2%;
+    --neutral-45-hsl: 250 calc(var(--saturation-factor, 1)*10.3%) 39%;
+    --neutral-46-hsl: 250 calc(var(--saturation-factor, 1)*10.6%) 37.7%;
+    --neutral-47-hsl: 250 calc(var(--saturation-factor, 1)*10.5%) 36.3%;
+    --neutral-48-hsl: 250 calc(var(--saturation-factor, 1)*11.4%) 34.8%;
+    --neutral-49-hsl: 250 calc(var(--saturation-factor, 1)*11.8%) 33.6%;
+    --neutral-50-hsl: 250 calc(var(--saturation-factor, 1)*12.2%) 32.4%;
+    --neutral-51-hsl: 250 calc(var(--saturation-factor, 1)*12.5%) 31.5%;
+    --neutral-52-hsl: 250 calc(var(--saturation-factor, 1)*12.2%) 30.9%;
+    --neutral-53-hsl: 250 calc(var(--saturation-factor, 1)*13.1%) 30.2%;
+    --neutral-54-hsl: 250 calc(var(--saturation-factor, 1)*12.7%) 29.6%;
+    --neutral-55-hsl: 250 calc(var(--saturation-factor, 1)*13.1%) 28.8%;
+    --neutral-56-hsl: 250 calc(var(--saturation-factor, 1)*12.7%) 28.1%;
+    --neutral-57-hsl: 250 calc(var(--saturation-factor, 1)*13%) 27.3%;
+    --neutral-58-hsl: 250 calc(var(--saturation-factor, 1)*13.3%) 26.9%;
+    --neutral-59-hsl: 250 calc(var(--saturation-factor, 1)*13.6%) 26%;
+    --neutral-60-hsl: 250 calc(var(--saturation-factor, 1)*14%) 25.2%;
+    --neutral-61-hsl: 250 calc(var(--saturation-factor, 1)*13.6%) 24.6%;
+    --neutral-62-hsl: 250 calc(var(--saturation-factor, 1)*14.6%) 24%;
+    --neutral-63-hsl: 250 calc(var(--saturation-factor, 1)*14.2%) 23.4%;
+    --neutral-64-hsl: 250 calc(var(--saturation-factor, 1)*14.6%) 22.6%;
+    --neutral-65-hsl: 250 calc(var(--saturation-factor, 1)*14.8%) 22.2%;
+    --neutral-66-hsl: 250 calc(var(--saturation-factor, 1)*15.2%) 21.4%;
+    --neutral-67-hsl: 250 calc(var(--saturation-factor, 1)*14.7%) 20.8%;
+    --neutral-68-hsl: 250 calc(var(--saturation-factor, 1)*14.1%) 20.2%;
+    --neutral-69-hsl: 250 calc(var(--saturation-factor, 1)*15.4%) 19.6%;
+    --neutral-70-hsl: 250 calc(var(--saturation-factor, 1)*14.8%) 19%;
+    --neutral-71-hsl: 250 calc(var(--saturation-factor, 1)*15.2%) 18.2%;
+    --neutral-72-hsl: 250 calc(var(--saturation-factor, 1)*15.5%) 17.8%;
+    --neutral-73-hsl: 250 calc(var(--saturation-factor, 1)*15.9%) 17%;
+    --neutral-74-hsl: 250 calc(var(--saturation-factor, 1)*16.2%) 16.6%;
+    --neutral-75-hsl: 250 calc(var(--saturation-factor, 1)*16.7%) 15.8%;
+    --neutral-76-hsl: 250 calc(var(--saturation-factor, 1)*15.9%) 15.3%;
+    --neutral-77-hsl: 250 calc(var(--saturation-factor, 1)*16.2%) 14.9%;
+    --neutral-78-hsl: 250 calc(var(--saturation-factor, 1)*16.7%) 14.1%;
+    --neutral-79-hsl: 250 calc(var(--saturation-factor, 1)*17%) 13.7%;
+    --neutral-80-hsl: 250 calc(var(--saturation-factor, 1)*17.5%) 13%;
+    --neutral-81-hsl: 250 calc(var(--saturation-factor, 1)*16.5%) 12.4%;
+    --neutral-82-hsl: 250 calc(var(--saturation-factor, 1)*16.9%) 12%;
+    --neutral-83-hsl: 250 calc(var(--saturation-factor, 1)*17.4%) 11.3%;
+    --neutral-84-hsl: 250 calc(var(--saturation-factor, 1)*17.8%) 10.9%;
+    --neutral-85-hsl: 250 calc(var(--saturation-factor, 1)*18.4%) 10.2%;
+    --neutral-86-hsl: 250 calc(var(--saturation-factor, 1)*18.8%) 9.8%;
+    --neutral-87-hsl: 250 calc(var(--saturation-factor, 1)*17.5%) 9.3%;
+    --neutral-88-hsl: 250 calc(var(--saturation-factor, 1)*20%) 8.7%;
+    --neutral-89-hsl: 250 calc(var(--saturation-factor, 1)*18.5%) 8.2%;
+    --neutral-90-hsl: 250 calc(var(--saturation-factor, 1)*19%) 7.8%;
+    --neutral-91-hsl: 250 calc(var(--saturation-factor, 1)*19.8%) 7.1%;
+    --neutral-92-hsl: 250 calc(var(--saturation-factor, 1)*17.9%) 6.5%;
+    --neutral-93-hsl: 250 calc(var(--saturation-factor, 1)*21.4%) 6%;
+    --neutral-94-hsl: 250 calc(var(--saturation-factor, 1)*19.7%) 5.1%;
+    --neutral-95-hsl: 250 calc(var(--saturation-factor, 1)*20.9%) 4.4%;
+    --neutral-96-hsl: 250 calc(var(--saturation-factor, 1)*22.4%) 3.8%;
+    --neutral-97-hsl: 250 calc(var(--saturation-factor, 1)*26%) 2.7%;
+    --neutral-98-hsl: 250 calc(var(--saturation-factor, 1)*22.8%) 1.9%;
+    --neutral-99-hsl: 250 calc(var(--saturation-factor, 1)*26%) 0.8%;
+    --neutral-100-hsl: 250 calc(var(--saturation-factor, 1)*14%) 0%;
+    /* blurple scale -> neon cyan */
+    --blurple-1-hsl: 186 calc(var(--saturation-factor, 1)*88%) 95.1%;
+    --blurple-2-hsl: 186 calc(var(--saturation-factor, 1)*88%) 94.5%;
+    --blurple-3-hsl: 186 calc(var(--saturation-factor, 1)*88%) 93.7%;
+    --blurple-4-hsl: 186 calc(var(--saturation-factor, 1)*88%) 92.9%;
+    --blurple-5-hsl: 186 calc(var(--saturation-factor, 1)*88%) 92.4%;
+    --blurple-6-hsl: 186 calc(var(--saturation-factor, 1)*88%) 91.6%;
+    --blurple-7-hsl: 186 calc(var(--saturation-factor, 1)*88%) 91%;
+    --blurple-8-hsl: 186 calc(var(--saturation-factor, 1)*88%) 90.2%;
+    --blurple-9-hsl: 186 calc(var(--saturation-factor, 1)*88%) 89.6%;
+    --blurple-10-hsl: 186 calc(var(--saturation-factor, 1)*88%) 89%;
+    --blurple-11-hsl: 186 calc(var(--saturation-factor, 1)*88%) 88.2%;
+    --blurple-12-hsl: 186 calc(var(--saturation-factor, 1)*88%) 87.6%;
+    --blurple-13-hsl: 186 calc(var(--saturation-factor, 1)*88%) 86.9%;
+    --blurple-14-hsl: 186 calc(var(--saturation-factor, 1)*88%) 86.3%;
+    --blurple-15-hsl: 186 calc(var(--saturation-factor, 1)*88%) 85.7%;
+    --blurple-16-hsl: 186 calc(var(--saturation-factor, 1)*88%) 85.1%;
+    --blurple-17-hsl: 186 calc(var(--saturation-factor, 1)*88%) 84.5%;
+    --blurple-18-hsl: 186 calc(var(--saturation-factor, 1)*88%) 83.7%;
+    --blurple-19-hsl: 186 calc(var(--saturation-factor, 1)*88%) 83.1%;
+    --blurple-20-hsl: 186 calc(var(--saturation-factor, 1)*88%) 82.5%;
+    --blurple-21-hsl: 186 calc(var(--saturation-factor, 1)*88%) 82%;
+    --blurple-22-hsl: 186 calc(var(--saturation-factor, 1)*88%) 81.4%;
+    --blurple-23-hsl: 186 calc(var(--saturation-factor, 1)*88%) 80.8%;
+    --blurple-24-hsl: 186 calc(var(--saturation-factor, 1)*88%) 80.2%;
+    --blurple-25-hsl: 186 calc(var(--saturation-factor, 1)*88%) 79.6%;
+    --blurple-26-hsl: 186 calc(var(--saturation-factor, 1)*88%) 79%;
+    --blurple-27-hsl: 186 calc(var(--saturation-factor, 1)*86.4%) 78.2%;
+    --blurple-28-hsl: 186 calc(var(--saturation-factor, 1)*86.4%) 77.8%;
+    --blurple-29-hsl: 186 calc(var(--saturation-factor, 1)*85%) 77.1%;
+    --blurple-30-hsl: 186 calc(var(--saturation-factor, 1)*85.1%) 76.5%;
+    --blurple-31-hsl: 186 calc(var(--saturation-factor, 1)*83.7%) 75.7%;
+    --blurple-32-hsl: 186 calc(var(--saturation-factor, 1)*82.5%) 74.9%;
+    --blurple-33-hsl: 186 calc(var(--saturation-factor, 1)*82.6%) 74.5%;
+    --blurple-34-hsl: 186 calc(var(--saturation-factor, 1)*81.4%) 73.7%;
+    --blurple-35-hsl: 186 calc(var(--saturation-factor, 1)*81.5%) 73.3%;
+    --blurple-36-hsl: 186 calc(var(--saturation-factor, 1)*80.5%) 72.5%;
+    --blurple-37-hsl: 186 calc(var(--saturation-factor, 1)*80.6%) 72%;
+    --blurple-38-hsl: 186 calc(var(--saturation-factor, 1)*79.6%) 71.4%;
+    --blurple-39-hsl: 186 calc(var(--saturation-factor, 1)*79.7%) 70.8%;
+    --blurple-40-hsl: 186 calc(var(--saturation-factor, 1)*78.7%) 70.2%;
+    --blurple-41-hsl: 186 calc(var(--saturation-factor, 1)*77.8%) 69.4%;
+    --blurple-42-hsl: 186 calc(var(--saturation-factor, 1)*78%) 69%;
+    --blurple-43-hsl: 186 calc(var(--saturation-factor, 1)*77.1%) 68.4%;
+    --blurple-44-hsl: 186 calc(var(--saturation-factor, 1)*77.3%) 67.8%;
+    --blurple-45-hsl: 186 calc(var(--saturation-factor, 1)*76.4%) 67.3%;
+    --blurple-46-hsl: 186 calc(var(--saturation-factor, 1)*76.5%) 66.9%;
+    --blurple-47-hsl: 186 calc(var(--saturation-factor, 1)*75.7%) 66.3%;
+    --blurple-48-hsl: 186 calc(var(--saturation-factor, 1)*75.9%) 65.9%;
+    --blurple-49-hsl: 186 calc(var(--saturation-factor, 1)*75.1%) 65.1%;
+    --blurple-50-hsl: 186 calc(var(--saturation-factor, 1)*75.3%) 64.7%;
+    --blurple-51-hsl: 186 calc(var(--saturation-factor, 1)*70.2%) 63.1%;
+    --blurple-52-hsl: 186 calc(var(--saturation-factor, 1)*65.6%) 61.6%;
+    --blurple-53-hsl: 186 calc(var(--saturation-factor, 1)*61.3%) 60%;
+    --blurple-54-hsl: 186 calc(var(--saturation-factor, 1)*58%) 58.6%;
+    --blurple-55-hsl: 186 calc(var(--saturation-factor, 1)*54.2%) 57.1%;
+    --blurple-56-hsl: 186 calc(var(--saturation-factor, 1)*51.4%) 55.7%;
+    --blurple-57-hsl: 186 calc(var(--saturation-factor, 1)*48.7%) 54.3%;
+    --blurple-58-hsl: 186 calc(var(--saturation-factor, 1)*45.6%) 52.7%;
+    --blurple-59-hsl: 186 calc(var(--saturation-factor, 1)*43.3%) 51.4%;
+    --blurple-60-hsl: 186 calc(var(--saturation-factor, 1)*41.1%) 50%;
+    --blurple-61-hsl: 186 calc(var(--saturation-factor, 1)*41.2%) 48.6%;
+    --blurple-62-hsl: 186 calc(var(--saturation-factor, 1)*41.3%) 47.3%;
+    --blurple-63-hsl: 186 calc(var(--saturation-factor, 1)*41.6%) 46.1%;
+    --blurple-64-hsl: 186 calc(var(--saturation-factor, 1)*41.7%) 44.7%;
+    --blurple-65-hsl: 186 calc(var(--saturation-factor, 1)*41.8%) 43.3%;
+    --blurple-66-hsl: 186 calc(var(--saturation-factor, 1)*42.2%) 42.2%;
+    --blurple-67-hsl: 186 calc(var(--saturation-factor, 1)*42.3%) 40.8%;
+    --blurple-68-hsl: 186 calc(var(--saturation-factor, 1)*42.7%) 39.6%;
+    --blurple-69-hsl: 186 calc(var(--saturation-factor, 1)*42.9%) 38.2%;
+    --blurple-70-hsl: 186 calc(var(--saturation-factor, 1)*43.3%) 37.1%;
+    --blurple-71-hsl: 186 calc(var(--saturation-factor, 1)*43.5%) 35.7%;
+    --blurple-72-hsl: 186 calc(var(--saturation-factor, 1)*44%) 34.5%;
+    --blurple-73-hsl: 186 calc(var(--saturation-factor, 1)*43.7%) 33.5%;
+    --blurple-74-hsl: 186 calc(var(--saturation-factor, 1)*44.3%) 32.4%;
+    --blurple-75-hsl: 186 calc(var(--saturation-factor, 1)*44.8%) 31.2%;
+    --blurple-76-hsl: 186 calc(var(--saturation-factor, 1)*45.2%) 29.8%;
+    --blurple-77-hsl: 186 calc(var(--saturation-factor, 1)*45.8%) 28.6%;
+    --blurple-78-hsl: 186 calc(var(--saturation-factor, 1)*46.5%) 27.5%;
+    --blurple-79-hsl: 186 calc(var(--saturation-factor, 1)*47.3%) 26.3%;
+    --blurple-80-hsl: 186 calc(var(--saturation-factor, 1)*47.1%) 25.3%;
+    --blurple-81-hsl: 186 calc(var(--saturation-factor, 1)*47.9%) 24.1%;
+    --blurple-82-hsl: 186 calc(var(--saturation-factor, 1)*48.9%) 22.9%;
+    --blurple-83-hsl: 186 calc(var(--saturation-factor, 1)*49.9%) 21.8%;
+    --blurple-84-hsl: 186 calc(var(--saturation-factor, 1)*50.2%) 21%;
+    --blurple-85-hsl: 186 calc(var(--saturation-factor, 1)*51.4%) 19.8%;
+    --blurple-86-hsl: 186 calc(var(--saturation-factor, 1)*51.3%) 18.8%;
+    --blurple-87-hsl: 186 calc(var(--saturation-factor, 1)*52.8%) 17.6%;
+    --blurple-88-hsl: 186 calc(var(--saturation-factor, 1)*54.9%) 16.7%;
+    --blurple-89-hsl: 186 calc(var(--saturation-factor, 1)*55%) 15.7%;
+    --blurple-90-hsl: 186 calc(var(--saturation-factor, 1)*57.1%) 14.5%;
+    --blurple-91-hsl: 186 calc(var(--saturation-factor, 1)*57.8%) 13.7%;
+    --blurple-92-hsl: 186 calc(var(--saturation-factor, 1)*60.5%) 12.5%;
+    --blurple-93-hsl: 186 calc(var(--saturation-factor, 1)*61.2%) 11.6%;
+    --blurple-94-hsl: 186 calc(var(--saturation-factor, 1)*61.9%) 10.6%;
+    --blurple-95-hsl: 186 calc(var(--saturation-factor, 1)*65.5%) 9.2%;
+    --blurple-96-hsl: 186 calc(var(--saturation-factor, 1)*66.5%) 8%;
+    --blurple-97-hsl: 186 calc(var(--saturation-factor, 1)*67.3%) 6.7%;
+    --blurple-98-hsl: 186 calc(var(--saturation-factor, 1)*66.9%) 4.9%;
+    --blurple-99-hsl: 186 calc(var(--saturation-factor, 1)*74.5%) 2.5%;
+    --blurple-100-hsl: 186 calc(var(--saturation-factor, 1)*0%) 0%;
+    /* translucent overlays (hover / selected): faint indigo-white */
+    --opacity-1-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-4-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-8-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-12-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-16-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-20-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-24-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-28-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-32-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-36-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-40-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-44-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-48-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-52-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-56-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-60-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-64-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-68-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-72-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-76-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-80-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-84-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-88-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-92-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+    --opacity-96-hsl: 250 calc(var(--saturation-factor, 1)*30%) 74%;
+}
+
+/* =========================================================================
+   3. TYPOGRAPHY
+   html:root:root outranks Discord's per-language :root:lang() font rules.
+   ========================================================================= */
+html:root:root {
+    --font-primary: var(--cp-font);
+    --font-display: var(--cp-font);
+    --font-headline: var(--cp-font-display);
+    --font-code: var(--cp-font-code);
+    --primitive-typography-family-dm-sans: var(--cp-font);
+    --primitive-typography-family-rethink-sans: var(--cp-font);
+}
+
+body {
+    font-family: var(--cp-font);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+/* =========================================================================
+   4. DISCORD DESIGN TOKENS
+   Applies to every dark variant (Dark / Darker / Midnight), but not to
+   Nitro profile themes, which keep their own colours.
+   ========================================================================= */
+:root:is(.theme-dark, .theme-darker, .theme-midnight),
+:root :is(.theme-dark, .theme-darker, .theme-midnight):not(.custom-user-profile-theme) {
+    /* Backgrounds */
+    --app-frame-background: var(--cp-bg-0);
+    --background-base-lowest: var(--cp-bg-0);
+    --background-base-lower: var(--cp-bg-1);
+    --background-base-low: var(--cp-bg-2);
+    --background-surface-high: var(--cp-surface-1);
+    --background-surface-higher: var(--cp-surface-2);
+    --background-surface-highest: var(--cp-surface-3);
+    --background-mod-subtle: rgb(150 140 255 / 0.04);
+    --background-mod-muted: rgb(150 140 255 / 0.06);
+    --background-mod-normal: rgb(150 140 255 / 0.08);
+    --background-mod-strong: rgb(150 140 255 / 0.12);
+    --background-code: #040308;
+    --background-scrim: rgb(1 1 4 / 0.85);
+    --background-brand: var(--cp-accent-strong);
+    --background-accent: var(--cp-accent-strong);
+    --modal-background: var(--cp-surface-1);
+    --card-background-default: var(--cp-surface-1);
+    --chat-background-default: var(--cp-surface-1);
+    --custom-channel-members-bg: var(--cp-bg-1);
+
+    /* Brand / accent */
+    --brand-360: color-mix(in oklab, var(--cp-accent) 70%, white);
+    --brand-400: color-mix(in oklab, var(--cp-accent) 85%, white);
+    --brand-500: var(--cp-accent-strong);
+    --brand-500-hsl: 188 88% 25%;
+    --brand-560: color-mix(in oklab, var(--cp-accent-strong) 85%, black);
+    --brand-600: color-mix(in oklab, var(--cp-accent-strong) 70%, black);
+    --text-brand: var(--cp-accent);
+    --icon-brand: var(--cp-accent);
+    --control-primary-background-default: var(--cp-accent-strong);
+    --control-primary-background-hover: color-mix(in oklab, var(--cp-accent-strong) 85%, var(--cp-accent));
+    --control-primary-background-active: color-mix(in oklab, var(--cp-accent-strong) 80%, black);
+    --control-secondary-background-default: rgb(150 140 255 / 0.07);
+    --control-secondary-background-hover: rgb(150 140 255 / 0.11);
+    --control-secondary-background-active: rgb(150 140 255 / 0.15);
+    --control-secondary-border-default: var(--cp-line-2);
+    --control-secondary-border-hover: var(--cp-line-neon);
+    --control-secondary-border-active: var(--cp-line-neon);
+    --togglebutton-background-selected: var(--cp-accent-soft);
+    --togglebutton-border-selected: var(--cp-line-neon);
+    --reaction-background-active: var(--cp-accent-soft);
+    --reaction-border-active: var(--cp-line-neon);
+    --radio-border-selected-default: var(--cp-accent);
+    --keyword-highlight-background: color-mix(in oklab, var(--cp-magenta) 28%, transparent);
+
+    /* Status colours, pushed toward neon but kept dim enough to read */
+    --status-positive: #22c987;
+    --status-warning: var(--cp-yellow);
+    --status-danger: var(--cp-red);
+
+    /* Text */
+    --text-strong: var(--cp-text-strong);
+    --text-default: var(--cp-text);
+    --text-muted: var(--cp-text-muted);
+    --text-subtle: var(--cp-text-subtle);
+    --text-link: var(--cp-link);
+    --chat-text-muted: var(--cp-text-muted);
+    --channels-default: var(--cp-text-muted);
+
+    /* Interactive: hover / pressed / selected rows everywhere */
+    --interactive-text-default: var(--cp-text-muted);
+    --interactive-text-hover: var(--cp-text);
+    --interactive-text-active: var(--cp-text-strong);
+    --interactive-icon-default: var(--cp-text-muted);
+    --interactive-icon-hover: var(--cp-accent);
+    --interactive-icon-active: var(--cp-text-strong);
+    --interactive-muted: color-mix(in oklab, var(--cp-text-subtle) 70%, transparent);
+    --interactive-background-hover: rgb(150 140 255 / 0.05);
+    --interactive-background-active: rgb(150 140 255 / 0.08);
+    --interactive-background-selected: var(--cp-accent-soft);
+    --interactive-accent-background-default: var(--cp-accent-soft);
+    --icon-default: var(--cp-text);
+    --icon-muted: var(--cp-text-muted);
+    --icon-subtle: var(--cp-text-subtle);
+    --icon-strong: var(--cp-text-strong);
+
+    /* Lines */
+    --border-subtle: var(--cp-line-1);
+    --border-muted: var(--cp-line-1);
+    --border-normal: var(--cp-line-2);
+    --border-strong: var(--cp-line-3);
+    --border-focus: var(--cp-accent);
+    --app-frame-border: var(--cp-line-1);
+    --chat-border: var(--cp-line-1);
+
+    /* Inputs */
+    --input-background-default: var(--cp-bg-2);
+    --input-border-default: var(--cp-line-2);
+    --input-border-hover: var(--cp-line-3);
+    --input-border-active: var(--cp-accent);
+    --input-placeholder-text-default: var(--cp-text-subtle);
+    --input-text-default: var(--cp-text);
+
+    /* Messages */
+    --message-background-hover: rgb(150 140 255 / 0.03);
+    --message-highlight-background-default: var(--cp-accent-softer);
+    --message-highlight-background-hover: var(--cp-accent-soft);
+    --message-mentioned-background-default: color-mix(in oklab, var(--cp-yellow) 6%, transparent);
+    --message-mentioned-background-hover: color-mix(in oklab, var(--cp-yellow) 10%, transparent);
+
+    /* Scrollbars */
+    --scrollbar-auto-thumb: color-mix(in oklab, var(--cp-accent) 22%, transparent);
+    --scrollbar-auto-track: transparent;
+    --scrollbar-thin-thumb: color-mix(in oklab, var(--cp-accent) 22%, transparent);
+    --scrollbar-thin-track: transparent;
+
+    /* Elevation */
+    --shadow-low: 0 1px 3px rgb(0 0 0 / 0.4);
+    --shadow-medium: 0 8px 24px -6px rgb(0 0 0 / 0.6);
+    --shadow-high: var(--cp-shadow);
+}
+
+::selection {
+    background: color-mix(in oklab, var(--cp-magenta) 35%, transparent);
+    color: var(--cp-text-strong);
+}
+
+/* =========================================================================
+   5. APP SHELL + ATMOSPHERE
+   ========================================================================= */
+
+/* Faint neon haze in the corners of the app frame */
+.bg_Fd0FEH {
+    overflow: hidden;
+}
+
+.bg_Fd0FEH::before {
+    content: "";
+    position: absolute;
+    inset: -20%;
+    pointer-events: none;
+    background:
+        radial-gradient(32% 36% at 85% 10%, color-mix(in oklab, var(--cp-magenta) 6%, transparent), transparent 70%),
+        radial-gradient(30% 36% at 10% 90%, color-mix(in oklab, var(--cp-cyan) 5%, transparent), transparent 70%);
+}
+
+/* CRT scanlines over the whole app (never blocks clicks) */
+.app_QbT-Jy::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: var(--cp-scanlines);
+    background: repeating-linear-gradient(0deg, rgb(0 0 0) 0 1px, transparent 1px 3px);
+    mix-blend-mode: multiply;
+}
+
+.bar_3zSH5d {
+    background: transparent;
+}
+
+.title_3zSH5d {
+    font-family: var(--cp-font-display);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--cp-text-muted);
+}
+
+.winButtonClose_3zSH5d:hover {
+    background-color: var(--cp-red) !important;
+}
+
+/* Channel sidebar: a neon seam on its right edge */
+.sidebarList_pog62O {
+    background: var(--cp-bg-2);
+    border-color: var(--cp-line-1) !important;
+    box-shadow: inset -1px 0 0 color-mix(in oklab, var(--cp-accent) 10%, transparent);
+}
+
+/* User panel (bottom-left): chamfered glass plate with a neon top edge */
+.panels_pog62O {
+    background:
+        linear-gradient(90deg, var(--cp-accent), var(--cp-accent-2)) top / 100% 1px no-repeat,
+        var(--cp-glass);
+    backdrop-filter: var(--cp-blur);
+    border-radius: 0;
+    clip-path: var(--cp-chamfer);
+    box-shadow: var(--cp-edge);
+}
+
+/* =========================================================================
+   6. SERVER BAR
+   ========================================================================= */
+.blobContainer_IaPwK5 {
+    transition: transform var(--cp-med) var(--cp-ease-snap), filter var(--cp-med) var(--cp-ease);
+}
+
+.blobContainer_IaPwK5:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 calc(8px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-accent) 45%, transparent));
+}
+
+.blobContainer_IaPwK5:active {
+    transform: scale(0.94);
+}
+
+.blobContainer_IaPwK5.selected_IaPwK5 {
+    filter: drop-shadow(0 0 calc(10px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-magenta) 45%, transparent));
+}
+
+.guildSeparator_3WHVfy {
+    background: linear-gradient(90deg, transparent, var(--cp-line-neon), transparent);
+    border-radius: 0;
+}
+
+/* Selected / unread pill: neon gradient */
+.item__o8_Xq {
+    background: linear-gradient(180deg, var(--cp-accent), var(--cp-accent-2));
+    box-shadow: var(--cp-glow);
+}
+
+.numberBadge_lMvXrQ {
+    background-color: var(--cp-magenta) !important;
+    color: #12020b !important;
+    font-weight: 700;
+    box-shadow: var(--cp-glow-2);
+}
+
+/* =========================================================================
+   7. CHANNEL LIST
+   Channel rows have no stable class, so these rules use Discord's list-item ids.
+   ========================================================================= */
+[data-list-item-id^="channels___"] {
+    border-radius: var(--cp-radius-sm) !important;
+    box-shadow: inset 0 0 0 0 transparent;
+    transition:
+        background-color var(--cp-fast) var(--cp-ease),
+        color var(--cp-fast) var(--cp-ease),
+        box-shadow var(--cp-med) var(--cp-ease),
+        transform var(--cp-med) var(--cp-ease);
+}
+
+[data-list-item-id^="channels___"]:hover {
+    transform: translateX(2px);
+    box-shadow: inset 2px 0 0 0 color-mix(in oklab, var(--cp-accent) 55%, transparent);
+}
+
+/* Selected channel: solid neon bar + glowing name */
+[data-list-item-id^="channels___"][aria-current="page"],
+[aria-selected="true"]>[data-list-item-id^="channels___"],
+li[class*="selected"] [data-list-item-id^="channels___"] {
+    box-shadow: inset 2px 0 0 0 var(--cp-accent), inset 12px 0 18px -14px color-mix(in oklab, var(--cp-accent) 70%, transparent);
+    color: var(--cp-text-strong);
+    text-shadow: var(--cp-text-glow);
+}
+
+/* =========================================================================
+   8. CHAT
+   ========================================================================= */
+
+/* Faint grid behind the messages */
+.chatContent_z_gUBg {
+    background-color: var(--cp-bg-1);
+    background-image:
+        linear-gradient(rgb(120 110 255 / var(--cp-grid)) 1px, transparent 1px),
+        linear-gradient(90deg, rgb(120 110 255 / var(--cp-grid)) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+
+/* Channel header: display font + neon underline */
+.title_z_gUBg {
+    border-bottom: 1px solid var(--cp-line-1);
+    box-shadow: 0 1px 0 color-mix(in oklab, var(--cp-accent) 18%, transparent);
+}
+
+.titleWrapper_ybUK7Z h1,
+.titleWrapper_ybUK7Z [class*="title"] {
+    font-family: var(--cp-font-display);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* Message rows: magenta edge on hover */
+.message_SY_P2T {
+    border-radius: var(--cp-radius-sm) !important;
+    margin-inline: 8px;
+    box-shadow: inset 0 0 0 0 transparent;
+    transition:
+        background-color var(--cp-fast) var(--cp-ease),
+        box-shadow var(--cp-med) var(--cp-ease);
+}
+
+.message_SY_P2T:hover {
+    box-shadow: inset 2px 0 0 0 color-mix(in oklab, var(--cp-magenta) 70%, transparent);
+}
+
+.mentioned_SY_P2T::before {
+    background: var(--cp-yellow) !important;
+    box-shadow: 0 0 calc(8px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-yellow) 60%, transparent);
+    border-radius: 0;
+}
+
+.replying_SY_P2T::before {
+    background: var(--cp-accent) !important;
+    border-radius: 0;
+}
+
+/* Usernames: a touch of letter-spacing */
+.header_2i8Bfm [class*="username"] {
+    letter-spacing: 0.02em;
+}
+
+/* Avatars: neon halo on hover */
+.avatar_2i8Bfm {
+    transition: transform var(--cp-med) var(--cp-ease-snap), filter var(--cp-med) var(--cp-ease);
+}
+
+.message_SY_P2T:hover .avatar_2i8Bfm {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 calc(6px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-accent) 45%, transparent));
+}
+
+.repliedMessage_2i8Bfm::before {
+    border-color: var(--cp-line-neon);
+}
+
+/* Code: terminal look */
+.markup_ku1OHH pre,
+.markup_ku1OHH code {
+    border-radius: var(--cp-radius-sm);
+    font-family: var(--cp-font-code);
+}
+
+.markup_ku1OHH code.inline {
+    color: var(--cp-cyan);
+    background: color-mix(in oklab, var(--cp-cyan) 9%, var(--cp-bg-0));
+    border: 1px solid color-mix(in oklab, var(--cp-cyan) 18%, transparent);
+}
+
+.markup_ku1OHH pre {
+    border: 1px solid var(--cp-line-2);
+    border-left: 2px solid var(--cp-accent);
+    background: var(--background-code);
+}
+
+.codeContainer_ku1OHH {
+    border-radius: var(--cp-radius-sm);
+}
+
+.blockquoteDivider_ku1OHH {
+    background: linear-gradient(180deg, var(--cp-accent), var(--cp-accent-2));
+    border-radius: 0;
+}
+
+.roleMention_ku1OHH,
+.markup_ku1OHH .mention {
+    border-radius: var(--cp-radius-sm);
+}
+
+/* Embeds: chamfered card */
+.embedFull_XyW1ZT {
+    border-radius: 0;
+    clip-path: var(--cp-chamfer);
+    background: var(--cp-surface-1);
+    box-shadow: var(--cp-edge);
+}
+
+.embedTitle_XyW1ZT {
+    font-family: var(--cp-font);
+    font-weight: 700;
+}
+
+/* Reactions: angular chips */
+.reaction_MmKct8 {
+    border-radius: var(--cp-radius-sm);
+    transition:
+        transform var(--cp-med) var(--cp-ease-snap),
+        background-color var(--cp-fast) var(--cp-ease),
+        border-color var(--cp-fast) var(--cp-ease),
+        box-shadow var(--cp-med) var(--cp-ease);
+}
+
+.reaction_MmKct8:hover {
+    transform: translateY(-1px);
+    border-color: var(--cp-line-neon);
+}
+
+.reaction_MmKct8:active {
+    transform: scale(0.94);
+}
+
+.reactionMe_MmKct8 {
+    background-color: var(--cp-accent-soft);
+    border-color: var(--cp-line-neon);
+    box-shadow: var(--cp-glow);
+}
+
+.reactionMe_MmKct8 .reactionCount_MmKct8 {
+    color: var(--cp-accent);
+}
+
+/* =========================================================================
+   9. MESSAGE BOX
+   ========================================================================= */
+.channelTextArea_2x8-Qn .scrollableContainer_2x8-Qn {
+    background: var(--cp-bg-2);
+    border: 1px solid var(--cp-line-2);
+    border-radius: var(--cp-radius-md);
+    transition:
+        border-color var(--cp-med) var(--cp-ease),
+        box-shadow var(--cp-slow) var(--cp-ease);
+}
+
+.channelTextArea_2x8-Qn:focus-within .scrollableContainer_2x8-Qn {
+    border-color: var(--cp-line-neon);
+    box-shadow: var(--cp-glow), inset 0 0 0 1px color-mix(in oklab, var(--cp-accent) 15%, transparent);
+}
+
+.channelTextArea_2x8-Qn textarea,
+.channelTextArea_2x8-Qn [role="textbox"] {
+    caret-color: var(--cp-magenta);
+}
+
+.channelTextArea_2x8-Qn .button_2x8-Qn {
+    transition: transform var(--cp-med) var(--cp-ease-snap), color var(--cp-fast) var(--cp-ease), filter var(--cp-fast) var(--cp-ease);
+}
+
+.channelTextArea_2x8-Qn .button_2x8-Qn:hover {
+    transform: scale(1.1);
+    filter: drop-shadow(0 0 calc(6px * var(--cp-glow-strength)) color-mix(in oklab, var(--cp-accent) 60%, transparent));
+}
+
+/* =========================================================================
+   10. MEMBER LIST
+   ========================================================================= */
+.container_86es0b,
+.members_86es0b,
+.member_86es0b {
+    background: var(--cp-bg-1);
+}
+
+.container_86es0b {
+    border-inline-start-color: var(--cp-line-1);
+}
+
+.container_J1Adu_ {
+    border-radius: var(--cp-radius-sm);
+    transition:
+        background-color var(--cp-fast) var(--cp-ease),
+        box-shadow var(--cp-med) var(--cp-ease),
+        transform var(--cp-med) var(--cp-ease);
+}
+
+.container_J1Adu_:hover {
+    transform: translateX(2px);
+    box-shadow: inset 2px 0 0 0 color-mix(in oklab, var(--cp-accent) 55%, transparent);
+}
+
+.container_J1Adu_.selected_J1Adu_ {
+    background: var(--cp-accent-soft);
+    box-shadow: inset 2px 0 0 0 var(--cp-accent);
+}
+
+/* Role headers read like HUD labels */
+.membersGroup_86es0b {
+    font-family: var(--cp-font-display);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    color: color-mix(in oklab, var(--cp-accent) 60%, var(--cp-text-muted));
+}
+
+/* =========================================================================
+   11. FLOATING UI: menus, tooltips, popouts, modals
+   ========================================================================= */
+.menu_M3qk4j {
+    background: var(--cp-glass) !important;
+    backdrop-filter: var(--cp-blur);
+    border: 1px solid var(--cp-line-2) !important;
+    border-top: 1px solid var(--cp-line-neon) !important;
+    border-radius: var(--cp-radius-md);
+    box-shadow: var(--cp-shadow);
+}
+
+.item_M3qk4j {
+    border-radius: var(--cp-radius-sm);
+    transition:
+        background-color var(--cp-fast) var(--cp-ease),
+        color var(--cp-fast) var(--cp-ease),
+        padding var(--cp-med) var(--cp-ease);
+}
+
+.item_M3qk4j.focused_M3qk4j {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--cp-accent) 22%, transparent), transparent);
+    color: var(--cp-text-strong);
+    padding-inline-start: 12px;
+    box-shadow: inset 2px 0 0 0 var(--cp-accent);
+}
+
+.item_M3qk4j.colorDanger_M3qk4j.focused_M3qk4j {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--cp-red) 26%, transparent), transparent);
+    box-shadow: inset 2px 0 0 0 var(--cp-red);
+    color: #ffb3c1;
+}
+
+.separator_M3qk4j {
+    background: linear-gradient(90deg, var(--cp-line-neon), transparent) !important;
+}
+
+.tooltipPrimary_3_v8qp {
+    --tooltip-pointer-bg: var(--cp-surface-3);
+    background: var(--cp-surface-3);
+    border: 1px solid var(--cp-line-neon);
+    border-radius: var(--cp-radius-sm);
+    box-shadow: var(--shadow-medium), var(--cp-glow);
+}
+
+.tooltipPrimary_3_v8qp .tooltipPointer_3_v8qp {
+    border-top-color: var(--cp-surface-3);
+}
+
+.outer_P1YEjQ {
+    border-radius: var(--cp-radius-lg);
+    box-shadow: var(--cp-shadow), 0 0 0 1px var(--cp-line-2);
+}
+
+.root__KoJTP {
+    border: 1px solid var(--cp-line-2);
+    border-top: 1px solid var(--cp-line-neon);
+    border-radius: var(--cp-radius-lg);
+    box-shadow: var(--cp-shadow);
+}
+
+.header__KoJTP h1,
+.header__KoJTP [class*="title"] {
+    font-family: var(--cp-font-display);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* =========================================================================
+   12. CONTROLS
+   ========================================================================= */
+.button_9OQtot {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition:
+        transform var(--cp-fast) var(--cp-ease),
+        filter var(--cp-fast) var(--cp-ease),
+        box-shadow var(--cp-med) var(--cp-ease),
+        background-color var(--cp-fast) var(--cp-ease),
+        background-position var(--cp-slow) var(--cp-ease);
+}
+
+.button_9OQtot:not(:disabled):hover {
+    filter: brightness(1.1);
+}
+
+.button_9OQtot:not(:disabled):active {
+    transform: scale(0.97);
+}
+
+/* Filled buttons: chamfered corners */
+.lookFilled_9OQtot {
+    border-radius: 0 !important;
+    clip-path: var(--cp-chamfer);
+}
+
+/* Brand buttons: cyan -> magenta gradient that slides on hover */
+.lookFilled_9OQtot.colorBrand_9OQtot:not(:disabled) {
+    background: linear-gradient(110deg, var(--cp-accent-strong), #5c1653, var(--cp-accent-strong));
+    background-size: 220% 100%;
+    background-position: 0% 0;
+    color: #fff;
+}
+
+.lookFilled_9OQtot.colorBrand_9OQtot:not(:disabled):hover {
+    background-position: 100% 0;
+}
+
+.lookFilled_9OQtot.colorRed_9OQtot:not(:disabled) {
+    background-color: #96183a;
+}
+
+.lookOutlined_9OQtot {
+    border-radius: var(--cp-radius-sm);
+}
+
+.lookOutlined_9OQtot:not(:disabled):hover {
+    border-color: var(--cp-accent) !important;
+    color: var(--cp-accent) !important;
+}
+
+.inputDefault_cZux1n {
+    border-radius: var(--cp-radius-sm);
+    caret-color: var(--cp-magenta);
+    transition: border-color var(--cp-med) var(--cp-ease), box-shadow var(--cp-med) var(--cp-ease);
+}
+
+.inputDefault_cZux1n:focus {
+    box-shadow: var(--cp-glow);
+}
+
+/* Settings sidebar tabs */
+.side_6zZYhF .header_6zZYhF {
+    font-family: var(--cp-font-display);
+    letter-spacing: 0.14em;
+    color: color-mix(in oklab, var(--cp-accent) 60%, var(--cp-text-muted));
+}
+
+.side_6zZYhF .item_6zZYhF {
+    border-radius: var(--cp-radius-sm);
+    transition:
+        background-color var(--cp-fast) var(--cp-ease),
+        color var(--cp-fast) var(--cp-ease),
+        transform var(--cp-med) var(--cp-ease);
+}
+
+.side_6zZYhF .item_6zZYhF:hover {
+    transform: translateX(2px);
+}
+
+.side_6zZYhF .item_6zZYhF.selected_6zZYhF {
+    background: linear-gradient(90deg, color-mix(in oklab, var(--cp-accent) 20%, transparent), transparent);
+    color: var(--cp-text-strong);
+    box-shadow: inset 2px 0 0 0 var(--cp-accent);
+}
+
+.side_6zZYhF .separator_6zZYhF {
+    background: linear-gradient(90deg, var(--cp-line-neon), transparent);
+}
+
+:is(.thin_tqapBM, .auto_tqapBM)::-webkit-scrollbar-thumb {
+    border-radius: 0 !important;
+}
+
+:is(.thin_tqapBM, .auto_tqapBM)::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--cp-accent) 45%, transparent);
+}
+
+/* =========================================================================
+   13. ANIMATIONS: skipped when "Reduce motion" is on (Discord or OS)
+   Entrance animations use "backwards" fill so they never hold a
+   transform that would block the hover effects.
+   ========================================================================= */
+@keyframes cp-pop {
+    from {
+        opacity: 0;
+        transform: translateY(4px) scale(0.98);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes cp-fade-up {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+@keyframes cp-slide-in {
+    from {
+        opacity: 0;
+        transform: translateX(-6px);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Boot-up flicker, like a neon tube catching */
+@keyframes cp-flicker {
+    0% {
+        opacity: 0;
+    }
+
+    10% {
+        opacity: 0.8;
+    }
+
+    14% {
+        opacity: 0.2;
+    }
+
+    22% {
+        opacity: 1;
+    }
+
+    26% {
+        opacity: 0.5;
+    }
+
+    34%,
+    100% {
+        opacity: 1;
+    }
+}
+
+/* RGB-split glitch for text */
+@keyframes cp-glitch {
+
+    0%,
+    100% {
+        text-shadow: none;
+        transform: none;
+    }
+
+    20% {
+        text-shadow: -2px 0 var(--cp-magenta), 2px 0 var(--cp-cyan);
+        transform: translateX(1px);
+    }
+
+    40% {
+        text-shadow: 2px 0 var(--cp-magenta), -2px 0 var(--cp-cyan);
+        transform: translateX(-1px);
+    }
+
+    60% {
+        text-shadow: -1px 0 var(--cp-magenta), 1px 0 var(--cp-cyan);
+        transform: none;
+    }
+
+    80% {
+        text-shadow: none;
+    }
+}
+
+@keyframes cp-flow {
+    from {
+        background-position: 50% 0%;
+    }
+
+    to {
+        background-position: 50% 200%;
+    }
+}
+
+@keyframes cp-shimmer {
+    from {
+        background-position: 0% 50%;
+    }
+
+    to {
+        background-position: 200% 50%;
+    }
+}
+
+@keyframes cp-glow-pulse {
+
+    0%,
+    100% {
+        opacity: 0.6;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes cp-dot {
+
+    0%,
+    100% {
+        background-color: var(--cp-text-muted);
+        transform: translateY(0);
+    }
+
+    50% {
+        background-color: var(--cp-accent);
+        transform: translateY(-2px);
+    }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+    /* Menus pop in; their items cascade */
+    html:not(.reduce-motion) .menu_M3qk4j {
+        animation: cp-pop var(--cp-med) var(--cp-ease) both;
+        transform-origin: top left;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j {
+        animation: cp-slide-in var(--cp-med) var(--cp-ease) backwards;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j:nth-child(2) {
+        animation-delay: 15ms;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j:nth-child(3) {
+        animation-delay: 30ms;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j:nth-child(4) {
+        animation-delay: 45ms;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j:nth-child(5) {
+        animation-delay: 60ms;
+    }
+
+    html:not(.reduce-motion) .menu_M3qk4j .item_M3qk4j:nth-child(n+6) {
+        animation-delay: 75ms;
+    }
+
+    html:not(.reduce-motion) .tooltip_3_v8qp {
+        animation: cp-fade-up var(--cp-fast) var(--cp-ease) backwards;
+    }
+
+    html:not(.reduce-motion) :is(.outer_P1YEjQ, .root__KoJTP) {
+        animation: cp-pop var(--cp-slow) var(--cp-ease) backwards;
+    }
+
+    /* Neon bits flicker on when they appear */
+    html:not(.reduce-motion) :is(.panels_pog62O, .item__o8_Xq) {
+        animation: cp-flicker 900ms linear backwards;
+    }
+
+    /* Messages fade up as they arrive */
+    html:not(.reduce-motion) .messageListItem_SY_P2T {
+        animation: cp-fade-up var(--cp-slow) var(--cp-ease) backwards;
+    }
+
+    html:not(.reduce-motion) .messagesWrapper_8AE1Qq {
+        animation: cp-fade-up var(--cp-slow) var(--cp-ease) backwards;
+    }
+
+    html:not(.reduce-motion) .embedFull_XyW1ZT {
+        animation: cp-pop var(--cp-slow) var(--cp-ease) backwards;
+    }
+
+    /* Channel name glitches when you hover the header */
+    html:not(.reduce-motion) .titleWrapper_ybUK7Z:hover :is(h1, [class*="title"]) {
+        animation: cp-glitch 380ms steps(2, end);
+    }
+
+    /* Channel names glitch briefly on hover */
+    html:not(.reduce-motion) [data-list-item-id^="channels___"]:hover [class*="name"] {
+        animation: cp-glitch 300ms steps(2, end);
+    }
+
+    /* Links: a neon underline sweeps in on hover */
+    html:not(.reduce-motion) .markup_ku1OHH a {
+        background-image: linear-gradient(90deg, var(--cp-accent), var(--cp-accent-2));
+        background-repeat: no-repeat;
+        background-position: 0 100%;
+        background-size: 0% 1px;
+        transition: background-size var(--cp-med) var(--cp-ease), color var(--cp-fast) var(--cp-ease);
+    }
+
+    html:not(.reduce-motion) .markup_ku1OHH a:hover {
+        background-size: 100% 1px;
+        text-decoration: none;
+    }
+
+    /* Code blocks light up on hover */
+    html:not(.reduce-motion) .markup_ku1OHH pre {
+        transition: border-color var(--cp-med) var(--cp-ease), box-shadow var(--cp-med) var(--cp-ease);
+    }
+
+    html:not(.reduce-motion) .markup_ku1OHH pre:hover {
+        border-color: var(--cp-line-neon);
+        box-shadow: var(--cp-glow);
+    }
+
+    html:not(.reduce-motion) .blockquoteDivider_ku1OHH {
+        background: linear-gradient(180deg, var(--cp-accent), var(--cp-accent-2), var(--cp-accent));
+        background-size: 100% 200%;
+        animation: cp-flow 3s linear infinite;
+    }
+
+    html:not(.reduce-motion) .mentioned_SY_P2T::before {
+        animation: cp-glow-pulse 2.4s ease-in-out infinite;
+    }
+
+    html:not(.reduce-motion) .guildSeparator_3WHVfy {
+        background: linear-gradient(90deg, transparent, var(--cp-accent), var(--cp-accent-2), transparent);
+        background-size: 200% 100%;
+        animation: cp-shimmer 5s linear infinite;
+    }
+
+    html:not(.reduce-motion) .typing_U9Tvvz .dot_U9Tvvz {
+        animation: cp-dot 1.2s ease-in-out infinite;
+    }
+
+    html:not(.reduce-motion) .typing_U9Tvvz .dot_U9Tvvz:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    html:not(.reduce-motion) .typing_U9Tvvz .dot_U9Tvvz:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    /* Channels and members slide in */
+    html:not(.reduce-motion) [data-list-item-id^="channels___"],
+    html:not(.reduce-motion) .container_J1Adu_ {
+        animation: cp-slide-in var(--cp-slow) var(--cp-ease) backwards;
+    }
+
+    /* Settings cog spins */
+    html:not(.reduce-motion) .buttons_g6VwXp> :last-child svg {
+        transition: transform var(--cp-slow) var(--cp-ease-snap);
+    }
+
+    html:not(.reduce-motion) .buttons_g6VwXp> :last-child:hover svg {
+        transform: rotate(90deg);
+    }
+}
+
+/* Reduce motion: also drop the hover movement */
+@media (prefers-reduced-motion: reduce) {
+
+    .blobContainer_IaPwK5:hover,
+    [data-list-item-id^="channels___"]:hover,
+    .container_J1Adu_:hover,
+    .reaction_MmKct8:hover,
+    .side_6zZYhF .item_6zZYhF:hover,
+    .message_SY_P2T:hover .avatar_2i8Bfm,
+    .channelTextArea_2x8-Qn .button_2x8-Qn:hover {
+        transform: none;
+    }
+}
+
+html.reduce-motion :is(.blobContainer_IaPwK5, [data-list-item-id^="channels___"], .container_J1Adu_, .reaction_MmKct8, .side_6zZYhF .item_6zZYhF, .channelTextArea_2x8-Qn .button_2x8-Qn):hover,
+html.reduce-motion .message_SY_P2T:hover .avatar_2i8Bfm {
+    transform: none;
+}
